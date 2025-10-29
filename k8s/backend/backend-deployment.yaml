@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend-container
+        image: ACCOUNT_ID.dkr.ecr.AWS_REGION.amazonaws.com/my-backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+          # From ConfigMap (non-sensitive)
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: backend-config
+                key: REDIS_HOST
+          - name: REDIS_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: backend-config
+                key: REDIS_PORT
+          - name: HF_MODEL_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: backend-config
+                key: HF_MODEL_NAME
+          # From Secret (sensitive)
+          - name: PINECONE_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: pinecone-secret
+                key: PINECONE_API_KEY
+          - name: PINECONE_HOST_NAME
+            valueFrom:
+              secretKeyRef:
+                name: pinecone-secret
+                key: PINECONE_HOST_NAME
+          - name: PINECONE_INDEX_NAME
+            valueFrom:
+              secretKeyRef:
+                name: pinecone-secret
+                key: PINECONE_INDEX_NAME
+
+        # Ephemeral volume for huggingface cache
+        volumeMounts:
+        - name: hf-cache
+          mountPath: /root/.cache/huggingface
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 30
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 30
+
+      volumes:
+      - name: hf-cache
+        emptyDir: {}
