@@ -1,0 +1,9 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore logs folder (if you don't want them in the image)
+logs/
+
+# Ignore a specific test file at the project root
+testing.py

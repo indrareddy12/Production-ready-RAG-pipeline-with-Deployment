@@ -1,0 +1,78 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Redis Configuration
+      - REDIS_HOST=${REDIS_HOST}
+      # Pinecone Configuration
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_HOST_NAME=${PINECONE_HOST_NAME}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME}
+      # HuggingFace Configuration
+      - HF_MODEL_NAME=${HF_MODEL_NAME:-deepseek-ai/deepseek-coder-1.3b-instruct}
+      - HF_HOME=/root/.cache/huggingface
+      - TORCH_HOME=/root/.cache/torch
+    depends_on:
+      - redis
+    networks:
+      - rag-network
+    volumes:
+      - ./backend:/app
+      - ./logs:/app/logs
+      - huggingface_cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://0.0.0.0:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - rag-network
+    volumes:
+      - ./frontend:/app
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  rag-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  huggingface_cache:
