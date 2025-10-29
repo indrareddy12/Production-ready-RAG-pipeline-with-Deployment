@@ -1,0 +1,59 @@
+# Application Settings
+environment: development
+app_name: "rag-assistant"
+api_version: "v1"
+debug: false
+
+# Server Settings
+host: "0.0.0.0"
+port: 8000
+workers: 1
+log_level: "INFO"
+
+# Redis Settings
+redis_host: "redis"
+redis_port: 6379
+redis_password:
+redis_db: 0
+session_ttl: 1800
+
+# Vector Store Settings
+vector_store_url: "http://localhost:8080"
+pinecone_api_key: 
+pinecone_environment: "your-pinecone-environment"
+pinecone_index_name: "document-index1"
+embedding_dimension: 1024
+
+# LLM Settings
+# llm_model_name: "deepseek-r1:1.5b"
+llm_model_name: "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+llm_history_limit: 10
+llm_max_context_length: 97304
+llm_system_prompt_tokens: 1000
+llm_max_history_tokens: 16384
+llm_max_response_tokens: 8192
+llm_temperature: 0.6
+llm_retry_attempts: 3
+llm_concurrent_requests: 100
+
+# File Processing Settings
+allowed_extensions:
+  - ".pdf"
+  - ".docx"
+  - ".txt"
+max_file_size: 10485760  # 10MB
+max_files_per_upload: 5
+chunk_size: 512
+chunk_overlap: 100
+
+# Rate Limiting
+rate_limit_uploads: "10/minute"
+rate_limit_queries: "30/minute"
+
+# Monitoring
+sentry_dsn: 
+enable_metrics: true
+metrics_port: 9090
+
+# Backend
+backend_url: "http://backend:8000"
